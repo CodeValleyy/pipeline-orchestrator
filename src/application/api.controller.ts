@@ -1,8 +1,6 @@
 import packageJson from "@/package.json";
-import { Controller } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
-import { Get } from '@nestjs/common';
-import { ApiResponse } from '@nestjs/swagger';
+import { ApiTags, ApiResponse } from '@nestjs/swagger';
+import { Get, Controller } from '@nestjs/common';
 
 @Controller('api')
 @ApiTags('api')
