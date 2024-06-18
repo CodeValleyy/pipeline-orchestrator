@@ -4,6 +4,7 @@ import { AppModule } from './app.module';
 import { Logger, ValidationPipe, ValidationPipeOptions } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { configureSwagger } from '@infra/config/swagger.config';
+import { setupAsyncApi } from '@infra/config/asyncapi.config';
 
 async function bootstrap() {
   const logger = new Logger('PipelineOrchestrator');
@@ -31,10 +32,13 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe(validationOptions));
 
   configureSwagger(app);
+  await setupAsyncApi(app);
+
 
   await app.listen(port, () => {
     logger.log(`${packageJson.name} is listening on port ${port}`);
     logger.log(`Swagger is available on ${hostname}/api`);
+    logger.log(`AsyncAPI is available on ${hostname}/asyncapi`);
   });
 }
 bootstrap();

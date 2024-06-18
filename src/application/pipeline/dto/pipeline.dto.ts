@@ -28,3 +28,23 @@ export class CreatePipelineDto {
     @Type(() => StepDto)
     steps: StepDto[];
 }
+
+export class StepResultDto {
+    @ApiProperty({
+        description: 'The result of the step execution',
+        example: '15',
+    })
+    output: string;
+
+    @ApiProperty({
+        description: 'The error message if the step failed',
+        example: 'An error occurred',
+    })
+    error: string;
+
+    @ApiProperty({
+        description: 'The number of the step in the pipeline',
+        example: 1,
+    })
+    stepNumber: number;
+}

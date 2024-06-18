@@ -1,5 +1,5 @@
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
-import { CreatePipelineDto, StepDto } from '@application/pipeline/dto/pipeline.dto';
+import { CreatePipelineDto, StepDto, StepResultDto } from '@application/pipeline/dto/pipeline.dto';
 import { lastValueFrom } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
 import { configService } from '@infra/config/config.service';
@@ -11,13 +11,13 @@ export class PipelineService {
 
     constructor(private readonly httpService: HttpService) { }
 
-    async executePipeline(createPipelineDto: CreatePipelineDto): Promise<string | null> {
+    async executePipeline(createPipelineDto: CreatePipelineDto, sendUpdate?: (update: StepResultDto) => void): Promise<string | null> {
         const { steps } = createPipelineDto;
         this.validateSteps(steps);
 
         let inputData: string | null = null;
 
-        for (const step of steps) {
+        for (const [index, step] of steps.entries()) {
             const { service, endpoint, payload } = step;
             const formattedEndpoint = this.formatEndpoint(endpoint);
             const updatedPayload = this.updatePayloadWithInputData(payload, inputData);
@@ -28,7 +28,27 @@ export class PipelineService {
 
                 inputData = this.extractOutputFromResponse(response, service, formattedEndpoint);
                 this.logger.log(`inputData: ${JSON.stringify(inputData)}`);
+
+                const stepResult: StepResultDto = {
+                    output: inputData,
+                    error: '',
+                    stepNumber: index + 1,
+                };
+
+                if (sendUpdate) {
+                    sendUpdate(stepResult);
+                }
             } catch (error) {
+                const stepResult: StepResultDto = {
+                    output: '',
+                    error: error.message || 'An unexpected error occurred',
+                    stepNumber: index + 1,
+                };
+
+                if (sendUpdate) {
+                    sendUpdate(stepResult);
+                }
+
                 this.handleHttpError(error, service, formattedEndpoint);
             }
         }
