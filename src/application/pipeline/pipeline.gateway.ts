@@ -3,7 +3,13 @@ import { Server } from 'socket.io';
 import { PipelineService } from '@domain/pipeline/services/pipeline.service';
 import { CreatePipelineDto, StepResultDto } from './dto/pipeline.dto';
 import { AsyncApiPub, AsyncApiSub } from 'nestjs-asyncapi';
-@WebSocketGateway()
+@WebSocketGateway({
+    cors: {
+        origin: 'http://localhost:5173',
+        methods: ['GET', 'POST'],
+        credentials: true,
+    }
+})
 export class PipelineGateway {
     @WebSocketServer()
     server: Server;

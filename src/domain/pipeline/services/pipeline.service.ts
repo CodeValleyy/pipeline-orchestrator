@@ -41,7 +41,7 @@ export class PipelineService {
             } catch (error) {
                 const stepResult: StepResultDto = {
                     output: '',
-                    error: error.message || 'An unexpected error occurred',
+                    error: error.response.data.error || error.message || 'An unexpected error occurred',
                     stepNumber: index + 1,
                 };
 
@@ -92,7 +92,7 @@ export class PipelineService {
     private handleHttpError(error: any, service: string, endpoint: string): void {
         if (error.response) {
             this.logger.error(`Error calling ${service}.${this.domain}/${endpoint}:`, error.response.data);
-            throw new HttpException(error.response.data, error.response.status);
+            throw new HttpException(error.response.data.error, error.response.status);
         } else {
             this.logger.error(`Unexpected error calling ${service}.${this.domain}/${endpoint}:`, error.message);
             throw new HttpException('Internal server error', HttpStatus.INTERNAL_SERVER_ERROR);
