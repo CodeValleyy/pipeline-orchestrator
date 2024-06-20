@@ -25,6 +25,10 @@ class ConfigService {
     return this.getValue('APP_HOSTNAME');
   }
 
+  public getDomain() {
+    return this.getValue('APP_DOMAIN');
+  }
+
   public getDynoCodeUrl() {
     return this.getValue('DYNO_CODE_URL');
   }
@@ -37,6 +41,7 @@ class ConfigService {
 const configService = new ConfigService(process.env).ensureValues([
   'APP_PORT',
   'APP_HOSTNAME',
+  'APP_DOMAIN',
   'DYNO_CODE_URL',
   'CONTENT_CRAFTERS_URL',
 ]);
