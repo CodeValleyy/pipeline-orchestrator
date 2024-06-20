@@ -1,5 +1,5 @@
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
-import { CreatePipelineDto, StepDto, StepResultDto } from '@application/pipeline/dto/pipeline.dto';
+import { CreatePipelineDto, PayloadDto, StepDto, StepResultDto } from '@application/pipeline/dto/pipeline.dto';
 import { lastValueFrom } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
 import { configService } from '@infra/config/config.service';
@@ -20,11 +20,10 @@ export class PipelineService {
         for (const [index, step] of steps.entries()) {
             const { service, endpoint, payload } = step;
             const formattedEndpoint = this.formatEndpoint(endpoint);
-            const updatedPayload = this.updatePayloadWithInputData(payload, inputData);
 
             try {
-                this.logger.log(`Calling http://${service}.${this.domain}/${formattedEndpoint} with payload: ${JSON.stringify(updatedPayload)} & inputData: ${JSON.stringify(inputData)}`);
-                const response = await this.makeHttpPostRequest(service, formattedEndpoint, updatedPayload);
+                this.logger.log(`Calling http://${service}.${this.domain}/${formattedEndpoint} with payload: ${JSON.stringify(payload)} & inputData: ${JSON.stringify(inputData)}`);
+                const response = await this.makeHttpPostRequest(service, formattedEndpoint, payload);
 
                 inputData = this.extractOutputFromResponse(response, service, formattedEndpoint);
                 this.logger.log(`inputData: ${JSON.stringify(inputData)}`);
@@ -64,13 +63,6 @@ export class PipelineService {
 
     private formatEndpoint(endpoint: string): string {
         return endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
-    }
-
-    private updatePayloadWithInputData(payload: any, inputData: string | null): any {
-        if (payload.code && inputData !== null) {
-            payload.code = payload.code.replace(/inputData/g, inputData);
-        }
-        return payload;
     }
 
     private async makeHttpPostRequest(service: string, endpoint: string, payload: any): Promise<any> {

@@ -1,6 +1,21 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsArray, ValidateNested, IsString, IsObject } from 'class-validator';
+import { IsArray, ValidateNested, IsString } from 'class-validator';
+
+export class PayloadDto {
+    @ApiProperty({ description: 'The code to execute', example: "print(f'Hello, {input_data}')" })
+    @IsString()
+    code: string;
+
+    @ApiProperty({ description: 'The language of the code', example: 'python' })
+    @IsString()
+    language: string;
+
+    @ApiProperty({ description: 'The input data for the code', example: 'World!' })
+    @IsString()
+    input: string;
+}
+
 
 export class StepDto {
     @ApiProperty({ description: 'The name of the service', example: 'dyno-code' })
@@ -11,14 +26,10 @@ export class StepDto {
     @IsString()
     endpoint: string;
 
-    @ApiProperty({
-        description: 'The payload to send', type: 'object', example: {
-            language: "python",
-            code: "print('Hello, World!')"
-        }
-    })
-    @IsObject()
-    payload: any;
+    @ApiProperty({ description: 'The payload to send to the service', type: PayloadDto })
+    @ValidateNested()
+    @Type(() => PayloadDto)
+    payload: PayloadDto;
 }
 
 export class CreatePipelineDto {
