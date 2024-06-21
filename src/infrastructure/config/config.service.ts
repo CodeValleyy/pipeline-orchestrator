@@ -29,6 +29,10 @@ class ConfigService {
     return this.getValue('APP_DOMAIN');
   }
 
+  public getFrontendUrl() {
+    return this.getValue('FRONTEND_URL');
+  }
+
   public getDynoCodeUrl() {
     return this.getValue('DYNO_CODE_URL');
   }
@@ -44,6 +48,7 @@ const configService = new ConfigService(process.env).ensureValues([
   'APP_DOMAIN',
   'DYNO_CODE_URL',
   'CONTENT_CRAFTERS_URL',
+  'FRONTEND_URL'
 ]);
 
 export { configService };

@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: pipeline-orchestrator
+    runtime: node
+    repo: https://github.com/jabibamman/pipeline-orchestrator.git
+    region: frankfurt # optional (defaults to oregon)
+    buildCommand: pnpm install
+    startCommand: pnpm start
+    plan: free # optional (defaults to starter instance type)
+    branch: master # optional (defaults to master)
+    envVars:
+      - key: APP_PORT
+        value: 5000
+
+      - key: APP_HOSTNAME
+        value: https://pipeline-orchestrator.code-valley.xyz
+
+      - key: DYNO_CODE_URL
+        value: http://dyno-code.code-valley.xyz
+
+      - key: CONTENT_CRAFTERS_URL
+        value: https://content-crafters.code-valley.xyz
