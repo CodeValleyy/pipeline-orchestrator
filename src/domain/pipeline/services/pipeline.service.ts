@@ -21,18 +21,32 @@ export class PipelineService {
             const { service, endpoint, payload } = step;
             const formattedEndpoint = this.formatEndpoint(endpoint);
 
-            try {
-                this.logger.log(`Calling http://${service}.${this.domain}/${formattedEndpoint} with payload: ${JSON.stringify(payload)} & inputData: ${JSON.stringify(inputData)}`);
-                const response = await this.makeHttpPostRequest(service, formattedEndpoint, payload);
 
-                inputData = this.extractOutputFromResponse(response, service, formattedEndpoint);
-                this.logger.log(`inputData: ${JSON.stringify(inputData)}`);
+            try {
+                if (payload.code.startsWith('http')) {
+                    payload.code = await this.fetchRawContentFromUrl(payload.code);
+                }
+
+                let requestData = { ...payload };
+
+                if (payload.input?.bufferInput) {
+                    const buffer = Buffer.from(payload.input.bufferInput.data);
+                    requestData.input = { bufferInput: { data: new Uint8Array(buffer) } };
+                }
+
+                const response = await this.makeHttpPostRequest(service, formattedEndpoint, requestData);
+
+                const responseData = this.extractOutputFromResponse(response, service, formattedEndpoint);
+                inputData = responseData.output;
 
                 const stepResult: StepResultDto = {
-                    output: inputData,
+                    output: responseData.output,
                     error: '',
                     stepNumber: index + 1,
+                    output_file_content: responseData.output_file_content,
+                    output_file_path: responseData.output_file_path
                 };
+
 
                 if (sendUpdate) {
                     sendUpdate(stepResult);
@@ -40,7 +54,7 @@ export class PipelineService {
             } catch (error) {
                 const stepResult: StepResultDto = {
                     output: '',
-                    error: error.response.data.error || error.message || 'An unexpected error occurred',
+                    error: error.response?.data?.error || error.message || 'An unexpected error occurred',
                     stepNumber: index + 1,
                 };
 
@@ -55,6 +69,25 @@ export class PipelineService {
         return inputData;
     }
 
+    private async fetchRawContentFromUrl(url: string): Promise<string> {
+        try {
+            const response = await lastValueFrom(this.httpService.get(url, { responseType: 'text' }));
+            return response.data;
+        } catch (error) {
+            this.logger.error(`Error fetching raw content from URL ${url}:`, error);
+            throw new HttpException('Error fetching raw content', HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private async convertBlobToArrayBuffer(blob: Blob): Promise<ArrayBuffer> {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as ArrayBuffer);
+            reader.onerror = reject;
+            reader.readAsArrayBuffer(blob);
+        });
+    }
+
     private validateSteps(steps: StepDto[]): void {
         if (!Array.isArray(steps)) {
             throw new TypeError('steps is not an array');
@@ -67,19 +100,39 @@ export class PipelineService {
 
     private async makeHttpPostRequest(service: string, endpoint: string, payload: any): Promise<any> {
         const url = `http://${service}.${this.domain}/${endpoint}`;
-        const response = await lastValueFrom(this.httpService.post(url, payload));
-        this.logger.log(`response: ${JSON.stringify(response.data)}`);
+
+        const formData = new FormData();
+        formData.append('language', payload.language);
+        formData.append('code', payload.code);
+
+        if (payload.input?.bufferInput) {
+            const buffer = Buffer.from(payload.input.bufferInput.data);
+            const file = new Blob([buffer]);
+            formData.append('input_file', file, 'input_file');
+        }
+
+        const response = await lastValueFrom(this.httpService.post(url, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        }));
         return response.data;
     }
 
-    private extractOutputFromResponse(response: any, service: string, endpoint: string): string {
-        if (response?.output) {
-            return response.output.trim();
+    private extractOutputFromResponse(response: any, service: string, endpoint: string): any {
+        if (response) {
+            const { output, output_file_content, output_file_path } = response;
+            return {
+                output: output ? output.trim() : '',
+                output_file_content: output_file_content || '',
+                output_file_path: output_file_path || ''
+            };
         } else {
             this.logger.error(`Invalid response structure from ${service}.${this.domain}/${endpoint}:`, response);
             throw new HttpException('Invalid response structure', HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
 
     private handleHttpError(error: any, service: string, endpoint: string): void {
         if (error.response) {

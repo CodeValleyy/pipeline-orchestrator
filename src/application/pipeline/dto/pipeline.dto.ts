@@ -1,6 +1,7 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsArray, ValidateNested, IsString } from 'class-validator';
+import { IsArray, ValidateNested, IsString, IsOptional } from 'class-validator';
+import { InputData } from './buffer.dto';
 
 export class PayloadDto {
     @ApiProperty({ description: 'The code to execute', example: "print(f'Hello, {input_data}')" })
@@ -11,11 +12,12 @@ export class PayloadDto {
     @IsString()
     language: string;
 
-    @ApiProperty({ description: 'The input data for the code', example: 'World!' })
-    @IsString()
-    input: string;
+    @ApiPropertyOptional({ description: 'The input data for the code', type: InputData })
+    @ValidateNested()
+    @Type(() => InputData)
+    @IsOptional()
+    input: InputData;
 }
-
 
 export class StepDto {
     @ApiProperty({ description: 'The name of the service', example: 'dyno-code' })
@@ -42,16 +44,29 @@ export class CreatePipelineDto {
 
 export class StepResultDto {
     @ApiProperty({
+        description: 'The error message if the step failed',
+        example: 'An error occurred',
+    })
+    error: string;
+
+    @ApiProperty({
         description: 'The result of the step execution',
         example: '15',
     })
     output: string;
 
     @ApiProperty({
-        description: 'The error message if the step failed',
-        example: 'An error occurred',
+        description: 'The content of the output file',
+        example: 'bla bla bla',
     })
-    error: string;
+    output_file_content?: string;
+
+    @ApiProperty({
+        description: 'The path of the output file',
+        example: 'output.txt',
+    })
+    output_file_path?: string;
+
 
     @ApiProperty({
         description: 'The number of the step in the pipeline',
