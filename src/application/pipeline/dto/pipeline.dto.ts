@@ -1,7 +1,6 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsArray, ValidateNested, IsString, IsOptional } from 'class-validator';
-import { InputData } from './buffer.dto';
+import { IsArray, ValidateNested, IsString } from 'class-validator';
 
 export class PayloadDto {
     @ApiProperty({ description: 'The code to execute', example: "print(f'Hello, {input_data}')" })
@@ -12,11 +11,8 @@ export class PayloadDto {
     @IsString()
     language: string;
 
-    @ApiPropertyOptional({ description: 'The input data for the code', type: InputData })
-    @ValidateNested()
-    @Type(() => InputData)
-    @IsOptional()
-    input: InputData;
+    @ApiProperty({ description: 'The input data for the code', type: 'string', format: 'binary', required: false })
+    input_file?: any;
 }
 
 export class StepDto {

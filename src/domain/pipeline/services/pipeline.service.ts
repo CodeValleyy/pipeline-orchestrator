@@ -3,6 +3,7 @@ import { CreatePipelineDto, PayloadDto, StepDto, StepResultDto } from '@applicat
 import { lastValueFrom } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
 import { configService } from '@infra/config/config.service';
+import * as fs from 'fs';
 
 @Injectable()
 export class PipelineService {
@@ -27,12 +28,18 @@ export class PipelineService {
                     payload.code = await this.fetchRawContentFromUrl(payload.code);
                 }
 
-                let requestData = { ...payload };
-
-                if (payload.input?.bufferInput) {
-                    const buffer = Buffer.from(payload.input.bufferInput.data);
-                    requestData.input = { bufferInput: { data: new Uint8Array(buffer) } };
+                if (payload.input_file) {
+                    const inputFile = payload.input_file;
+                    const base64Data = inputFile.data.split(';base64,').pop();
+                    const buffer = Buffer.from(base64Data, 'base64');
+                    payload.input_file = {
+                        buffer,
+                        originalname: inputFile.name
+                    };
                 }
+
+
+                let requestData = { ...payload };
 
                 const response = await this.makeHttpPostRequest(service, formattedEndpoint, requestData);
 
@@ -88,6 +95,11 @@ export class PipelineService {
         });
     }
 
+
+    private async convertFileToBlob(file: any): Promise<Blob> {
+        return new Blob([new Uint8Array(file.data)], { type: 'application/octet-stream' });
+    }
+
     private validateSteps(steps: StepDto[]): void {
         if (!Array.isArray(steps)) {
             throw new TypeError('steps is not an array');
@@ -98,24 +110,27 @@ export class PipelineService {
         return endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
     }
 
-    private async makeHttpPostRequest(service: string, endpoint: string, payload: any): Promise<any> {
+    private async makeHttpPostRequest(service: string, endpoint: string, payload: PayloadDto): Promise<StepResultDto> {
         const url = `http://${service}.${this.domain}/${endpoint}`;
-
         const formData = new FormData();
         formData.append('language', payload.language);
         formData.append('code', payload.code);
-
-        if (payload.input?.bufferInput) {
-            const buffer = Buffer.from(payload.input.bufferInput.data);
-            const file = new Blob([buffer]);
-            formData.append('input_file', file, 'input_file');
+        if (payload.input_file) {
+            const { buffer, originalname } = payload.input_file;
+            const blob = new Blob([buffer], { type: 'application/octet-stream' });
+            formData.append('input_file', blob, originalname);
         }
 
-        const response = await lastValueFrom(this.httpService.post(url, formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data'
-            }
-        }));
+
+        const response = await lastValueFrom(
+            this.httpService.post(
+                url, formData,
+                {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    },
+                    responseType: 'json'
+                }));
         return response.data;
     }
 
