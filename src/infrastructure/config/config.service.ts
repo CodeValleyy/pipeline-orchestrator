@@ -1,7 +1,7 @@
 require('dotenv').config();
 
 class ConfigService {
-  constructor(private env: { [k: string]: string | undefined }) { }
+  constructor(private env: { [k: string]: string | undefined }) {}
 
   private getValue(key: string, throwOnMissing = true): string {
     const value = this.env[key];
@@ -48,7 +48,7 @@ const configService = new ConfigService(process.env).ensureValues([
   'APP_DOMAIN',
   'DYNO_CODE_URL',
   'CONTENT_CRAFTERS_URL',
-  'FRONTEND_URL'
+  'FRONTEND_URL',
 ]);
 
 export { configService };

@@ -3,9 +3,7 @@ import { ApiController } from '@application/api.controller';
 import { PipelineModule } from '@application/pipeline/pipeline.module';
 
 @Module({
-    imports: [
-        PipelineModule
-    ],
-    controllers: [ApiController],
+  imports: [PipelineModule],
+  controllers: [ApiController],
 })
-export class ApiModule { }
+export class ApiModule {}
