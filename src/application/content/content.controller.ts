@@ -1,5 +1,5 @@
 import { ContentService } from '@domain/content/services/content.service';
-import { Body, Controller, Get, Logger, Param, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Logger, Param, Post } from '@nestjs/common';
 import { ApiBody, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SavePipelineDTO } from './dto/save.pipeline.dto';
 import { Pipeline } from '@application/pipeline/dto/pipeline.dto';
@@ -7,7 +7,7 @@ import { Pipeline } from '@application/pipeline/dto/pipeline.dto';
 @Controller('pipeline')
 @ApiTags('pipeline')
 export class ContentController {
-  constructor(private readonly contentService: ContentService) {}
+  constructor(private readonly contentService: ContentService) { }
 
   @Post('save')
   @ApiResponse({ status: 200, type: Pipeline })
@@ -25,8 +25,17 @@ export class ContentController {
   @ApiResponse({ status: 400, description: 'Bad Request' })
   @ApiResponse({ status: 500, description: 'Internal Server Error' })
   @ApiParam({ name: 'id', type: String })
-  async getPipelineFromMicroservice(@Param('id') id: string) {
+  async getPipelineFromMicroserviceById(@Param('id') id: string) {
     return await this.contentService.getPipelineFromMicroservice(id);
+  }
+
+  @Delete(':id')
+  @ApiResponse({ status: 200, type: Pipeline })
+  @ApiResponse({ status: 400, description: 'Bad Request' })
+  @ApiResponse({ status: 500, description: 'Internal Server Error' })
+  @ApiParam({ name: 'id', type: String })
+  async deletePipelineFromMicroserviceById(@Param('id') id: string) {
+    return await this.contentService.deletePipelineFromMicroservice(id);
   }
 
   @Get('list')
