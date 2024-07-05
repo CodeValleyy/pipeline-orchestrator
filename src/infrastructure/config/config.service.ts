@@ -38,7 +38,7 @@ class ConfigService {
   }
 
   public getContentCraftersUrl() {
-    return this.getValue('CONTENT_CRAFTERS_URL');
+    return this.getValue('CONTENT_CRAFTERS_URL') + '/v1';
   }
 }
 

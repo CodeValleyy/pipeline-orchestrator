@@ -8,7 +8,8 @@ import { Server } from 'socket.io';
 import { PipelineService } from '@domain/pipeline/services/pipeline.service';
 import { CreatePipelineDto, StepResultDto } from './dto/pipeline.dto';
 import { AsyncApiPub, AsyncApiSub } from 'nestjs-asyncapi';
-import { configService } from '@infra/config/config.service';
+import { ContentService } from '@domain/content/services/content.service';
+import { SavePipelineDTO } from '@application/content/dto/save.pipeline.dto';
 @WebSocketGateway({
   cors: {
     origin: '*', //configService.getFrontendUrl(),
@@ -20,7 +21,10 @@ export class PipelineGateway {
   @WebSocketServer()
   server: Server;
 
-  constructor(private readonly pipelineService: PipelineService) {}
+  constructor(
+    private readonly pipelineService: PipelineService,
+    private readonly contentService: ContentService,
+  ) {}
 
   @AsyncApiSub({
     channel: 'executePipeline',
@@ -53,5 +57,24 @@ export class PipelineGateway {
   })
   sendUpdate(update: StepResultDto) {
     this.server.emit('pipelineUpdate', update);
+  }
+
+  @AsyncApiSub({
+    channel: 'pipelineSave',
+    message: {
+      payload: CreatePipelineDto,
+    },
+  })
+  @SubscribeMessage('pipelineSave')
+  async handleSavePipeline(
+    @MessageBody() savePipelineDto: SavePipelineDTO,
+  ): Promise<void> {
+    try {
+      const result =
+        await this.contentService.savePipelineToMicroservice(savePipelineDto);
+      this.server.emit('pipelineSaved', result);
+    } catch (error) {
+      this.server.emit('pipelineError', error.message);
+    }
   }
 }

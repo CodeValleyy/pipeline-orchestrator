@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsArray, ValidateNested, IsString } from 'class-validator';
+import { IsArray, ValidateNested, IsString, IsInt } from 'class-validator';
 
 export class PayloadDto {
   @ApiProperty({
@@ -82,4 +82,47 @@ export class StepResultDto {
     example: 1,
   })
   stepNumber: number;
+}
+
+export class Pipeline {
+  @ApiProperty({
+    description: 'The ID of the pipeline',
+    example: '60f7b3b3d4b3f3b3f3b3f3b3',
+  })
+  @IsString()
+  id: string;
+
+  @ApiProperty({ description: 'The owner ID of the pipeline', example: 121 })
+  @IsInt()
+  owner_id: number;
+
+  @ApiProperty({
+    description: 'The name of the pipeline',
+    example: 'example_pipeline',
+  })
+  @IsString()
+  name: string;
+
+  @ApiProperty({
+    description: 'The description of the pipeline',
+    example: 'example_description',
+  })
+  @IsString()
+  description: string;
+
+  @ApiProperty({
+    description: 'The steps in the pipeline',
+    type: [String],
+    example: ['60f7b3b3d4b3f3b3f3b3f3b3', '60f7b3b3d4b3f3b3f3b3f3b4'],
+  })
+  @IsArray()
+  @IsString({ each: true })
+  steps: string[];
+
+  @ApiProperty({
+    description: 'The created date of the pipeline',
+    example: '2022-01-01T00:00:00Z',
+  })
+  @IsString()
+  created_date: string;
 }
