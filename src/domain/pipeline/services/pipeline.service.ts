@@ -15,7 +15,7 @@ export class PipelineService {
   private readonly logger = new Logger('PipelineService');
   private readonly domain = configService.getDomain();
 
-  constructor(private readonly httpService: HttpService) {}
+  constructor(private readonly httpService: HttpService) { }
 
   async executePipeline(
     createPipelineDto: CreatePipelineDto,
@@ -87,6 +87,11 @@ export class PipelineService {
 
         this.handleHttpError(error, service, formattedEndpoint);
       }
+
+      if (index + 1 < steps.length && steps[index + 1].payload.language === 'rust') {
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+      }
+
     }
 
     return inputData;
