@@ -9,7 +9,7 @@ const endpoint = configService.getContentCraftersUrl() + '/pipeline';
 
 @Injectable()
 export class ContentService {
-  constructor(private readonly httpService: HttpService) { }
+  constructor(private readonly httpService: HttpService) {}
 
   async savePipelineToMicroservice(
     pipeline: SavePipelineDTO,

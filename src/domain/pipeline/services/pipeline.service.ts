@@ -5,7 +5,7 @@ import {
   StepDto,
   StepResultDto,
 } from '@application/pipeline/dto/pipeline.dto';
-import { lastValueFrom } from 'rxjs';
+import { buffer, lastValueFrom } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
 import { configService } from '@infra/config/config.service';
 import * as fs from 'fs';
@@ -15,7 +15,7 @@ export class PipelineService {
   private readonly logger = new Logger('PipelineService');
   private readonly domain = configService.getDomain();
 
-  constructor(private readonly httpService: HttpService) { }
+  constructor(private readonly httpService: HttpService) {}
 
   async executePipeline(
     createPipelineDto: CreatePipelineDto,
@@ -43,10 +43,15 @@ export class PipelineService {
             buffer,
             originalname: inputFile.name,
           };
+          if (buffer.length === 0) {
+            throw new HttpException(
+              'Input file is empty',
+              HttpStatus.BAD_REQUEST,
+            );
+          }
         }
 
         let requestData = { ...payload };
-
         const response = await this.makeHttpPostRequest(
           service,
           formattedEndpoint,
@@ -58,7 +63,15 @@ export class PipelineService {
           service,
           formattedEndpoint,
         );
-        inputData = responseData.output;
+
+        inputData = responseData.output_file_content || responseData.output;
+
+        if (inputData && inputData.trim() === '') {
+          throw new HttpException(
+            'Input file is empty',
+            HttpStatus.BAD_REQUEST,
+          );
+        }
 
         const stepResult: StepResultDto = {
           output: responseData.output,
@@ -67,6 +80,13 @@ export class PipelineService {
           output_file_content: responseData.output_file_content,
           output_file_path: responseData.output_file_path,
         };
+
+        if (index + 1 < steps.length) {
+          steps[index + 1].payload.input_file = {
+            name: responseData.output_file_path,
+            data: `data:text/plain;base64,${inputData})}`,
+          };
+        }
 
         if (sendUpdate) {
           sendUpdate(stepResult);
@@ -87,11 +107,6 @@ export class PipelineService {
 
         this.handleHttpError(error, service, formattedEndpoint);
       }
-
-      if (index + 1 < steps.length && steps[index + 1].payload.language === 'rust') {
-        await new Promise((resolve) => setTimeout(resolve, 5000));
-      }
-
     }
 
     return inputData;
@@ -150,6 +165,9 @@ export class PipelineService {
       const { buffer, originalname } = payload.input_file;
       const blob = new Blob([buffer], { type: 'application/octet-stream' });
       formData.append('input_file', blob, originalname);
+      if (buffer.length === 0) {
+        throw new HttpException('Input file is empty', HttpStatus.BAD_REQUEST);
+      }
     }
 
     const response = await lastValueFrom(
@@ -160,6 +178,7 @@ export class PipelineService {
         responseType: 'json',
       }),
     );
+
     return response.data;
   }
 

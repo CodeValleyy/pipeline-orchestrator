@@ -1,5 +1,13 @@
 import { ContentService } from '@domain/content/services/content.service';
-import { Body, Controller, Delete, Get, Logger, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Logger,
+  Param,
+  Post,
+} from '@nestjs/common';
 import { ApiBody, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SavePipelineDTO } from './dto/save.pipeline.dto';
 import { Pipeline } from '@application/pipeline/dto/pipeline.dto';
@@ -7,7 +15,7 @@ import { Pipeline } from '@application/pipeline/dto/pipeline.dto';
 @Controller('pipeline')
 @ApiTags('pipeline')
 export class ContentController {
-  constructor(private readonly contentService: ContentService) { }
+  constructor(private readonly contentService: ContentService) {}
 
   @Post('save')
   @ApiResponse({ status: 200, type: Pipeline })

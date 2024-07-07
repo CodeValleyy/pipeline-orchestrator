@@ -10,6 +10,7 @@ import { CreatePipelineDto, StepResultDto } from './dto/pipeline.dto';
 import { AsyncApiPub, AsyncApiSub } from 'nestjs-asyncapi';
 import { ContentService } from '@domain/content/services/content.service';
 import { SavePipelineDTO } from '@application/content/dto/save.pipeline.dto';
+import { Logger } from '@nestjs/common/services';
 @WebSocketGateway({
   cors: {
     origin: '*', //configService.getFrontendUrl(),
@@ -45,7 +46,8 @@ export class PipelineGateway {
       );
       this.server.emit('pipelineResult', result);
     } catch (error) {
-      this.server.emit('pipelineError', error.message);
+      Logger.error('erreur ici: ' + error);
+      this.server.emit('pipelineError', error.message.message);
     }
   }
 
@@ -70,6 +72,7 @@ export class PipelineGateway {
     @MessageBody() savePipelineDto: SavePipelineDTO,
   ): Promise<void> {
     try {
+      Logger.log('savePipelineDto: ' + JSON.stringify(savePipelineDto));
       const result =
         await this.contentService.savePipelineToMicroservice(savePipelineDto);
       this.server.emit('pipelineSaved', result);
