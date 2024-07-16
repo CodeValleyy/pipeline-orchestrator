@@ -5,10 +5,9 @@ import {
   StepDto,
   StepResultDto,
 } from '@application/pipeline/dto/pipeline.dto';
-import { buffer, lastValueFrom } from 'rxjs';
+import { lastValueFrom } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
 import { configService } from '@infra/config/config.service';
-import * as fs from 'fs';
 
 @Injectable()
 export class PipelineService {
@@ -84,7 +83,8 @@ export class PipelineService {
         if (index + 1 < steps.length) {
           steps[index + 1].payload.input_file = {
             name: responseData.output_file_path,
-            data: `data:text/plain;base64,${inputData})}`,
+            data: `data: text / plain; base64, ${inputData})
+    } `,
           };
         }
 
@@ -119,7 +119,7 @@ export class PipelineService {
       );
       return response.data;
     } catch (error) {
-      this.logger.error(`Error fetching raw content from URL ${url}:`, error);
+      this.logger.error(`Error fetching raw content from URL ${url}: `, error);
       throw new HttpException(
         'Error fetching raw content',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -161,6 +161,7 @@ export class PipelineService {
     const formData = new FormData();
     formData.append('language', payload.language);
     formData.append('code', payload.code);
+    formData.append('output_extension', payload.output_extension);
     if (payload.input_file) {
       const { buffer, originalname } = payload.input_file;
       const blob = new Blob([buffer], { type: 'application/octet-stream' });

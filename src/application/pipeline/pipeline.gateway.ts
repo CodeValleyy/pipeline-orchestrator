@@ -46,7 +46,6 @@ export class PipelineGateway {
       );
       this.server.emit('pipelineResult', result);
     } catch (error) {
-      Logger.error('erreur ici: ' + error);
       this.server.emit('pipelineError', error.message.message);
     }
   }
@@ -72,7 +71,6 @@ export class PipelineGateway {
     @MessageBody() savePipelineDto: SavePipelineDTO,
   ): Promise<void> {
     try {
-      Logger.log('savePipelineDto: ' + JSON.stringify(savePipelineDto));
       const result =
         await this.contentService.savePipelineToMicroservice(savePipelineDto);
       this.server.emit('pipelineSaved', result);

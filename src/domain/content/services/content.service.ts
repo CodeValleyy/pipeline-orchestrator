@@ -14,7 +14,6 @@ export class ContentService {
   async savePipelineToMicroservice(
     pipeline: SavePipelineDTO,
   ): Promise<Pipeline> {
-    Logger.log('pipeline: ' + JSON.stringify(pipeline));
     try {
       const response = await firstValueFrom(
         this.httpService.post(endpoint + '/create', pipeline, {
@@ -26,7 +25,6 @@ export class ContentService {
 
       return response.data;
     } catch (error) {
-      Logger.error('erreur ici: ' + error);
       throw new BadRequestException(error.response.data);
     }
   }

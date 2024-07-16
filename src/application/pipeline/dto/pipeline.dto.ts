@@ -10,6 +10,14 @@ export class PayloadDto {
   @IsString()
   code: string;
 
+  @ApiProperty({
+    description: 'The output extension',
+    example: '.txt',
+    default: '.txt',
+  })
+  @IsString()
+  output_extension: string;
+
   @ApiProperty({ description: 'The language of the code', example: 'python' })
   @IsString()
   language: string;
