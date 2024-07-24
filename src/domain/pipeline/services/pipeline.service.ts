@@ -83,8 +83,7 @@ export class PipelineService {
         if (index + 1 < steps.length) {
           steps[index + 1].payload.input_file = {
             name: responseData.output_file_path,
-            data: `data: text / plain; base64, ${inputData})
-    } `,
+            data: `data:text/plain;base64,${inputData}`,
           };
         }
 
